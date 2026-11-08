@@ -79,3 +79,13 @@ def test_local_analysis_orchestrates_pac_extraction(tmp_path, monkeypatch):
     assert result["pac"]["parsed"] is True
     assert result["pac"]["record_count"] == 1
     assert (tmp_path / "reports" / "pac_extracted" / "system.img").read_bytes() == b"TEST"
+
+
+def test_local_analysis_enforces_total_byte_limit(tmp_path, monkeypatch):
+    from oem_research import local_analysis
+    firmware = tmp_path / "firmware"
+    firmware.mkdir()
+    (firmware / "large.bin").write_bytes(b"123456")
+    monkeypatch.setattr(local_analysis, "build_device_report", lambda *a, **k: {"device": {}})
+    with pytest.raises(ValueError, match="Total input-size limit"):
+        analyze_local(firmware, tmp_path / "reports", max_total_bytes=5)

@@ -1,6 +1,7 @@
 import argparse
 import csv
 import json
+import os
 from pathlib import Path
 from .archive import list_archive
 from .inventory import inventory
@@ -25,7 +26,7 @@ def main():
     la = sub.add_parser("analyze-local", help="Run a complete local-first read-only analysis on an extracted firmware tree or Unisoc PAC")
     la.add_argument("source", type=Path, help="Extracted firmware directory or .pac file")
     la.add_argument("--out", type=Path, default=Path("reports/local-analysis"))
-    la.add_argument("--ai", action="store_true", help="Add evidence-only GLM assessment")
+    la.add_argument("--ai", action="store_true", help="Add assessment from any OpenAI-compatible AI provider")\n    la.add_argument("--ai-base-url", help="Provider API base URL; defaults to DROIDSEC_AI_BASE_URL / OPENAI_BASE_URL")\n    la.add_argument("--ai-model", help="Exact model ID from provider; defaults to DROIDSEC_AI_MODEL / OPENAI_MODEL")
     la.add_argument("--cve-json", type=Path, help="Local NVD JSON 2.0 export")
     la.add_argument("--components-json", type=Path, help="Optional component inventory JSON")
     la.add_argument("--bulletin", type=Path, help="Saved official Android/vendor bulletin HTML or text")
@@ -45,13 +46,13 @@ def main():
     sec = sub.add_parser("security", help="Static ADB/MTP configuration triage; no live exploitation")
     sec.add_argument("directory", type=Path)
     sec.add_argument("--out", type=Path, default=Path("reports"))
-    sec.add_argument("--ai", action="store_true", help="Ask configured OpenAI-compatible model to analyze collected evidence")
+    sec.add_argument("--ai", action="store_true", help="Ask configured OpenAI-compatible provider to analyze collected evidence")\n    sec.add_argument("--ai-base-url", help="Provider API base URL")\n    sec.add_argument("--ai-model", help="Exact model ID from provider")
     dr = sub.add_parser("device-report", help="Build a device-specific ADB/MTP/SELinux/CVE report")
     dr.add_argument("directory", type=Path)
     dr.add_argument("--cve-json", type=Path, help="Local NVD CVE JSON 2.0 export")
     dr.add_argument("--components-json", type=Path, help="Optional JSON component inventory with name/version and optional CPE")
     dr.add_argument("--bulletin", type=Path, help="Saved official Android/vendor security bulletin HTML or text")
-    dr.add_argument("--ai", action="store_true", help="Add GLM/OpenAI-compatible evidence assessment")
+    dr.add_argument("--ai", action="store_true", help="Add assessment from any OpenAI-compatible AI provider")\n    dr.add_argument("--ai-base-url", help="Provider API base URL")\n    dr.add_argument("--ai-model", help="Exact model ID from provider")
     dr.add_argument("--out", type=Path, default=Path("reports/device-security"))
 
     se = sub.add_parser("selinux-compiled", help="Query an explicitly supplied compiled SELinux policy using SETools")
@@ -86,7 +87,7 @@ def main():
     ots = ot.add_subparsers(dest="action", required=True)
     oti = ots.add_parser("inspect"); oti.add_argument("payload", type=Path)
     ote = ots.add_parser("extract"); ote.add_argument("payload", type=Path); ote.add_argument("destination", type=Path)
-    sub.add_parser("vendors")
+    models = sub.add_parser("ai-models", help="List model IDs available from the configured OpenAI-compatible provider")\n    models.add_argument("--ai-base-url", help="Provider API base URL")\n    sub.add_parser("vendors")
 
     args = p.parse_args()
     if args.cmd == "analyze-local":
@@ -129,7 +130,7 @@ def main():
         print(json.dumps(result, indent=2))
     elif args.cmd == "device-report":
         from .device_report import build_device_report
-        result = build_device_report(args.directory, args.cve_json, args.ai, args.components_json, args.bulletin)
+        result = build_device_report(args.directory, args.cve_json, args.ai, args.components_json, args.bulletin, args.ai_base_url, args.ai_model)
         write_report(result, args.out)
         print(json.dumps(result, indent=2))
     elif args.cmd == "selinux-compiled":

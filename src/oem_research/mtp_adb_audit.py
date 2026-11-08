@@ -9,7 +9,7 @@ def audit_protocol_surface(root: Path)->dict:
     if not root.is_dir(): raise ValueError("Protocol audit requires an extracted firmware directory")
     mtp=[]; adb=[]; usb=[]; scanned=0
     for p in root.rglob("*"):
-        if not p.is_file() or p.suffix.lower() not in TEXT_EXT: continue
+        if p.is_symlink() or not p.is_file() or p.suffix.lower() not in TEXT_EXT: continue
         try:
             if p.stat().st_size>3*1024*1024: continue
             lines=p.read_text(encoding="utf-8",errors="ignore").splitlines()

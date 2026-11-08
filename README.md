@@ -75,3 +75,6 @@ Useful public upstream references for format validation:
 - Android OTA payload format schema: https://android.googlesource.com/platform/system/update_engine/+/master/update_metadata.proto
 
 For large real-world OTA test data, Google publishes official device OTA packages at https://developers.google.com/android/ota. Download only the exact device package you intend to validate; these can be multi-gigabyte files.
+
+
+See [`docs/REAL_FIRMWARE_VALIDATION.md`](docs/REAL_FIRMWARE_VALIDATION.md) for candidate public sources, provenance requirements, and the acceptance criteria for claiming real-firmware compatibility.

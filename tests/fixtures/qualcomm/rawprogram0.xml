@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<data>
+  <program SECTOR_SIZE_IN_BYTES="512" file_sector_offset="0" filename="gpt_main0.bin" label="PrimaryGPT" num_partition_sectors="34" physical_partition_number="0" start_byte_hex="0x0" start_sector="0"/>
+  <program SECTOR_SIZE_IN_BYTES="512" file_sector_offset="0" filename="boot.img" label="boot" num_partition_sectors="131072" physical_partition_number="0" start_sector="32768"/>
+  <program SECTOR_SIZE_IN_BYTES="512" file_sector_offset="0" filename="vbmeta.img" label="vbmeta" num_partition_sectors="64" physical_partition_number="0" start_sector="163840"/>
+</data>

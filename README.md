@@ -36,6 +36,24 @@ Reads GPT entries from a raw disk image and can extract the described partition 
     droidsec ota extract payload.bin ./ota_partitions
 Reads the CrAU header and protobuf manifest. Extraction supports REPLACE, REPLACE_BZ, REPLACE_XZ and ZERO operations. Delta operations requiring source partitions and specialized codecs are skipped; this is not yet a complete update_engine implementation. Verify output images before further analysis.
 
+
+## Device identification and USB security triage
+
+Run these commands against an **extracted firmware directory**:
+
+```bash
+droidsec fingerprint ./extracted_firmware --out reports/device
+droidsec security ./extracted_firmware --out reports/usb-security
+droidsec security ./extracted_firmware --ai --out reports/usb-security-ai
+```
+
+- **Device fingerprinting** reads Android property files such as `build.prop`, `default.prop`, and vendor/product property files. It reports manufacturer/brand, model, product/device codename, build fingerprint, Android version, platform and evidence file paths, with a confidence label. Exact model identity must be corroborated against trusted OEM metadata; firmware properties can be absent or spoofed.
+- **GPT table output** validates the GPT header and partition-entry CRCs, then emits partition names, type/unique GUIDs, LBA ranges, offsets, sizes and attributes as JSON; `--csv` exports the partition inventory as a table. Extraction remains read-only against the source image.
+- **ADB/MTP static review** scans extracted text configuration for ADB TCP listeners, debug/authentication properties, USB composition settings, MTP service references and related evidence. It generates findings with severity, evidence lines, explanations and hardening recommendations.
+- **AI-assisted assessment** (`--ai`) sends the collected static evidence to the configured OpenAI-compatible model. The model must distinguish observations from hypotheses; its output is advisory and should be checked by a human researcher.
+
+This does **not** claim to prove an exploit is present or exploitable. It does not connect to a phone, fuzz MTP, issue ADB commands, bypass pairing, or execute an exploit. Runtime validation belongs in an isolated, authorized test lab. Static configuration indicators can miss vulnerabilities or produce false positives.
+
 ## Other commands
     droidsec vendors
     droidsec inspect /path/to/firmware.zip --out reports

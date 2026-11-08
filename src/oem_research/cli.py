@@ -39,7 +39,7 @@ def main():
     dr = sub.add_parser("device-report", help="Build a device-specific ADB/MTP/SELinux/CVE report")
     dr.add_argument("directory", type=Path)
     dr.add_argument("--cve-json", type=Path, help="Local NVD CVE JSON 2.0 export")
-    dr.add_argument("--components-json", type=Path, help="Optional JSON component inventory with name/version and optional CPE")
+    dr.add_argument("--components-json", type=Path, help="Optional JSON component inventory with name/version and optional CPE")\n    dr.add_argument("--bulletin", type=Path, help="Saved official Android/vendor security bulletin HTML or text")
     dr.add_argument("--ai", action="store_true", help="Add GLM/OpenAI-compatible evidence assessment")
     dr.add_argument("--out", type=Path, default=Path("reports/device-security"))
 
@@ -51,6 +51,9 @@ def main():
     adb = sub.add_parser("adb-trace", help="Decode a raw ADB transport stream from an authorized capture")
     adb.add_argument("capture", type=Path); adb.add_argument("--out", type=Path, default=Path("reports/adb-trace"))
 
+    cap = sub.add_parser("capture", help="Analyze authorized PCAP/PCAPNG USBPcap capture")
+    cap.add_argument("file", type=Path); cap.add_argument("--protocol", choices=["both","mtp","adb"], default="both")
+    cap.add_argument("--out", type=Path, default=Path("reports/capture"))
     up = sub.add_parser("unisoc")
     ups = up.add_subparsers(dest="action", required=True)
     upi = ups.add_parser("inspect"); upi.add_argument("pac", type=Path)
@@ -97,9 +100,14 @@ def main():
             data["ai_assessment"] = summarize(data)
         write_report(data, args.out)
         print(json.dumps(data, indent=2))
+    elif args.cmd == "capture":
+        from .capture import inspect_capture
+        result = inspect_capture(args.file, args.protocol)
+        write_report(result, args.out)
+        print(json.dumps(result, indent=2))
     elif args.cmd == "device-report":
         from .device_report import build_device_report
-        result = build_device_report(args.directory, args.cve_json, args.ai, args.components_json)
+        result = build_device_report(args.directory, args.cve_json, args.ai, args.components_json, args.bulletin)
         write_report(result, args.out)
         print(json.dumps(result, indent=2))
     elif args.cmd == "selinux-compiled":

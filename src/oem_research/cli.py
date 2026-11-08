@@ -37,7 +37,10 @@ def main():
     sec.add_argument("--out", type=Path, default=Path("reports"))
     sec.add_argument("--ai", action="store_true", help="Ask configured OpenAI-compatible model to analyze collected evidence")
     dr = sub.add_parser("device-report", help="Build a device-specific ADB/MTP/SELinux/CVE report")
-    dr.add_argument("directory", type=Path)\n    dr.add_argument("--cve-json", type=Path, help="Local NVD CVE JSON 2.0 export")\n    dr.add_argument("--ai", action="store_true", help="Add GLM/OpenAI-compatible evidence assessment")\n    dr.add_argument("--out", type=Path, default=Path("reports/device-security"))
+    dr.add_argument("directory", type=Path)
+    dr.add_argument("--cve-json", type=Path, help="Local NVD CVE JSON 2.0 export")
+    dr.add_argument("--ai", action="store_true", help="Add GLM/OpenAI-compatible evidence assessment")
+    dr.add_argument("--out", type=Path, default=Path("reports/device-security"))
 
     up = sub.add_parser("unisoc")
     ups = up.add_subparsers(dest="action", required=True)

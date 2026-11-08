@@ -101,7 +101,7 @@ def main():
     if args.cmd == "analyze-local":
         result = analyze_local(args.source, args.out, args.ai, args.cve_json,
                                args.components_json, args.bulletin, args.max_files,
-                               args.max_total_bytes)
+                               args.max_total_bytes, args.ai_base_url, args.ai_model)
         print(json.dumps({
             "report_json": str(args.out / "report.json"),
             "report_markdown": str(args.out / "report.md"),
@@ -111,6 +111,11 @@ def main():
         }, indent=2))
     elif args.cmd == "vendors":
         print(VENDORS); return
+    elif args.cmd == "ai-models":
+        from .ai_provider import list_models
+        for model_id in list_models(base_url=args.ai_base_url):
+            print(model_id)
+        return
     if args.cmd == "plan":
         print(make_plan(args.question)); return
     if args.cmd == "inspect":
@@ -127,8 +132,8 @@ def main():
     elif args.cmd == "security":
         data = analyze_usb_security(args.directory)
         if args.ai:
-            from .glm import summarize
-            data["ai_assessment"] = summarize(data)
+            from .ai_provider import summarize
+            data["ai_assessment"] = summarize(data, base_url=args.ai_base_url, model=args.ai_model)
         write_report(data, args.out)
         print(json.dumps(data, indent=2))
     elif args.cmd == "capture":

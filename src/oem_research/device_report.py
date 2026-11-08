@@ -13,6 +13,9 @@ def build_device_report(root: Path, cve_json: Path|None=None, use_ai: bool=False
             "protocol_surface":audit_protocol_surface(root),
             "selinux":analyze_selinux(root),
             "cve_correlation":correlate_nvd(root,cve_json,device,components_json)}
+    if bulletin_file:
+        from .bulletin import analyze_bulletin
+        report["android_bulletin"] = analyze_bulletin(bulletin_file, device, report["cve_correlation"].get("matches", []))
     if use_ai:
         from .glm import summarize
         report["ai_assessment"]=summarize(report, system_prompt=("You are an Android OEM firmware security analyst. Analyze only supplied evidence. Separate confirmed observations, plausible risks, false-positive possibilities, and unknowns. Never invent CVEs or claim exploitability from strings alone. For CVEs, explain CPE/version uncertainty and OEM backport caveats. Prioritize device-specific mitigations. Return concise JSON with executive_summary, confirmed_evidence, hypotheses, prioritized_findings, validation_plan and confidence. Do not provide exploit payloads or bypass steps."))

@@ -189,3 +189,44 @@ droidsec device-report ./extracted_firmware --cve-json ./nvd.json \
 ```
 
 The bulletin parser extracts CVE identifiers and date tokens and cross-references the existing NVD candidate set. It does not infer that a device is vulnerable merely because a CVE appears in a bulletin, or that a device is patched solely from its SPL. Official Android bulletin sources: https://source.android.com/docs/security/bulletin/asb-overview
+
+
+## Local-first full firmware analysis (recommended for large samples)
+
+Large firmware packages do not need to be uploaded to ChatGPT or GitHub. Download and extract the archive on the analysis computer, then run DroidSec locally. The original source files are read-only; reports are written to a separate output directory.
+
+For a Unisoc/Spreadtrum PAC file:
+
+```bash
+droidsec analyze-local ./R2406_firmware.pac --out ./reports/polytron-r2406
+```
+
+For a firmware tree that you have already extracted:
+
+```bash
+droidsec analyze-local ./R2406_extracted --out ./reports/polytron-r2406
+```
+
+Optional evidence-only GLM assessment and offline CVE data:
+
+```bash
+droidsec analyze-local ./R2406_firmware.pac \
+  --ai --cve-json ./nvd.json --out ./reports/polytron-r2406
+```
+
+The command creates `report.json` and `report.md`, containing file sizes and SHA-256 hashes, filename-based partition hints, device fingerprint evidence, ADB/MTP static review, SELinux source-policy triage, and optional CVE/bulletin/AI results. For a PAC input, it also parses the PAC table and extracts payloads into the report directory's `pac_extracted/` folder. It refuses to overwrite an existing PAC extraction folder.
+
+### Handling the R2406 .7z sample
+
+The `.7z` container is intentionally extracted outside DroidSec using 7-Zip (or p7zip); DroidSec's safe archive extractor currently supports ZIP/TAR, not 7z. In WSL2 Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install -y p7zip-full
+7z x R2406_SC7731_EMMC_4.4.2_1300C_V1.0.8_20150918_20160901+PAC+File.7z -oR2406_extracted
+find R2406_extracted -type f -iname '*.pac' -print
+```
+
+Then pass the discovered PAC path to `analyze-local`. If the PAC parser rejects the file, preserve the original and send the error plus the PAC header metadata; do not force extraction. A PAC revision mismatch is a parser-compatibility issue, not proof the firmware is corrupt.
+
+**Important boundaries:** the workflow does not mount raw filesystems or automatically unpack ext4/EROFS/squashfs partition images. It inventories and hashes those images, and scans any already-extracted text/configuration. PAC parsing is revision-dependent. Compare extraction results with a second trusted PAC parser before considering the partition extraction validated. No firmware binaries are uploaded by this command.

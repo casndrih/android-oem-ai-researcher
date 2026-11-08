@@ -131,3 +131,15 @@ NVD JSON 2.0 exports can be obtained from the NVD data feeds/API and supplied lo
 - [AOSP system/core](https://android.googlesource.com/platform/system/core/) provides ADB daemon and USB composition implementation context. Always use a source revision corresponding to the target build.
 
 The protocol inventory is static. It does not connect to USB devices, send ADB commands, fuzz MTP, bypass pairing, or execute exploits. SELinux text triage does not replace parsing the compiled policy with SETools. NVD CPE matches are candidates, not confirmed affected-device findings. Dynamic validation requires an isolated, authorized test device and explicit human approval.
+
+
+## Captured MTP and ADB trace decoding
+
+DroidSec can structurally decode **raw concatenated MTP containers** and **raw concatenated ADB transport frames** from authorized captures. It does not connect to a device, issue commands, fuzz, or exploit either protocol. USBPcap/pcapng encapsulation is not yet decoded; extract the raw protocol byte stream with a trusted capture tool first.
+
+```bash
+droidsec mtp-trace authorized-mtp-stream.bin --out reports/mtp
+droidsec adb-trace authorized-adb-stream.bin --out reports/adb
+```
+
+The decoders validate lengths, frame boundaries, MTP transaction references, ADB command magic, payload bounds, and legacy checksums. Malformed input is reported as evidence rather than repaired. They are protocol-structure triage tools, not complete protocol conformance or exploitability tests.

@@ -97,6 +97,11 @@ def main():
             data["ai_assessment"] = summarize(data)
         write_report(data, args.out)
         print(json.dumps(data, indent=2))
+    elif args.cmd == "device-report":
+        from .device_report import build_device_report
+        result = build_device_report(args.directory, args.cve_json, args.ai, args.components_json)
+        write_report(result, args.out)
+        print(json.dumps(result, indent=2))
     elif args.cmd == "selinux-compiled":
         from .setools_adapter import inspect_compiled_policy
         result = inspect_compiled_policy(args.policy, args.timeout)

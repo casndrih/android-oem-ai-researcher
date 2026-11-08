@@ -17,10 +17,19 @@ from .ota_payload import inspect_payload, extract_payload
 from .super_image import unpack_super
 from .device_fingerprint import fingerprint_firmware
 from .usb_security import analyze_usb_security
+from .local_analysis import analyze_local
 
 def main():
     p = argparse.ArgumentParser(prog="droidsec")
     sub = p.add_subparsers(dest="cmd", required=True)
+    la = sub.add_parser("analyze-local", help="Run a complete local-first read-only analysis on an extracted firmware tree or Unisoc PAC")
+    la.add_argument("source", type=Path, help="Extracted firmware directory or .pac file")
+    la.add_argument("--out", type=Path, default=Path("reports/local-analysis"))
+    la.add_argument("--ai", action="store_true", help="Add evidence-only GLM assessment")
+    la.add_argument("--cve-json", type=Path, help="Local NVD JSON 2.0 export")
+    la.add_argument("--components-json", type=Path, help="Optional component inventory JSON")
+    la.add_argument("--bulletin", type=Path, help="Saved official Android/vendor bulletin HTML or text")
+    la.add_argument("--max-files", type=int, default=100000, help="Maximum regular files to inventory")
     a = sub.add_parser("inspect")
     a.add_argument("firmware", type=Path)
     a.add_argument("--out", type=Path, default=Path("reports"))
@@ -79,7 +88,17 @@ def main():
     sub.add_parser("vendors")
 
     args = p.parse_args()
-    if args.cmd == "vendors":
+    if args.cmd == "analyze-local":
+        result = analyze_local(args.source, args.out, args.ai, args.cve_json,
+                               args.components_json, args.bulletin, args.max_files)
+        print(json.dumps({
+            "report_json": str(args.out / "report.json"),
+            "report_markdown": str(args.out / "report.md"),
+            "file_count": result["file_count"],
+            "device": result.get("device", {}),
+            "source_firmware_modified": result["source_firmware_modified"],
+        }, indent=2))
+    elif args.cmd == "vendors":
         print(VENDORS); return
     if args.cmd == "plan":
         print(make_plan(args.question)); return

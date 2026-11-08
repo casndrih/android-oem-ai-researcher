@@ -107,7 +107,7 @@ def extract_payload(path: Path, destination: Path) -> list[dict]:
                 out.truncate(max_end*block)
                 for op in part["operations"]:
                     typ=op["type"]
-                    if typ not in (0,1,6): continue
+                    if typ not in (0,1,6,8): continue
                     offset=meta["data_offset"]+op["data_offset"]
                     if offset+op["data_length"]>total: raise ValueError("OTA operation data out of bounds")
                     src.seek(offset); raw=src.read(op["data_length"])
@@ -123,5 +123,5 @@ def extract_payload(path: Path, destination: Path) -> list[dict]:
                         size=count*block
                         if typ==6: continue
                         out.seek(start*block); out.write(decoded[cursor:cursor+size]); cursor+=size
-            results.append({"partition":part["name"],"file":str(target),"size":target.stat().st_size,"note":"REPLACE/REPLACE_BZ/ZERO operations applied; unsupported delta codecs skipped"})
+            results.append({"partition":part["name"],"file":str(target),"size":target.stat().st_size,"note":"REPLACE/REPLACE_BZ/REPLACE_XZ/ZERO operations applied; unsupported delta codecs skipped"})
     return results

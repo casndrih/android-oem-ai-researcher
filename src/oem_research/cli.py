@@ -1,4 +1,6 @@
 import argparse
+import csv
+import json
 from pathlib import Path
 from .archive import list_archive
 from .inventory import inventory
@@ -13,6 +15,8 @@ from .sparse import expand_sparse
 from .gpt import inspect_gpt, extract_gpt_partitions
 from .ota_payload import inspect_payload, extract_payload
 from .super_image import unpack_super
+from .device_fingerprint import fingerprint_firmware
+from .usb_security import analyze_usb_security
 
 def main():
     p = argparse.ArgumentParser(prog="droidsec")
@@ -25,6 +29,13 @@ def main():
     b.add_argument("--out", type=Path, default=Path("reports"))
     c = sub.add_parser("plan")
     c.add_argument("question")
+    fp = sub.add_parser("fingerprint", help="Identify likely OEM/device from extracted firmware properties")
+    fp.add_argument("directory", type=Path)
+    fp.add_argument("--out", type=Path, default=Path("reports"))
+    sec = sub.add_parser("security", help="Static ADB/MTP configuration triage; no live exploitation")
+    sec.add_argument("directory", type=Path)
+    sec.add_argument("--out", type=Path, default=Path("reports"))
+    sec.add_argument("--ai", action="store_true", help="Ask configured OpenAI-compatible model to analyze collected evidence")
 
     up = sub.add_parser("unisoc")
     ups = up.add_subparsers(dest="action", required=True)
@@ -39,7 +50,8 @@ def main():
     sp = sub.add_parser("sparse")
     sp.add_argument("image", type=Path); sp.add_argument("output", type=Path)
     gp = sub.add_parser("gpt")
-    gp.add_argument("image", type=Path); gp.add_argument("--sector-size", type=int, default=512); gp.add_argument("--extract", type=Path)
+    gp.add_argument("image", type=Path); gp.add_argument("--sector-size", type=int, default=512)
+    gp.add_argument("--extract", type=Path); gp.add_argument("--csv", type=Path, help="Write GPT partition inventory as CSV")
     su = sub.add_parser("super")
     su.add_argument("image", type=Path); su.add_argument("destination", type=Path); su.add_argument("--timeout", type=int, default=600)
     ot = sub.add_parser("ota")
@@ -60,6 +72,17 @@ def main():
         write_report(data, args.out)
     elif args.cmd == "partitions":
         write_report({"partitions": inspect_partitions(args.directory)}, args.out)
+    elif args.cmd == "fingerprint":
+        data = fingerprint_firmware(args.directory)
+        write_report(data, args.out)
+        print(json.dumps(data, indent=2))
+    elif args.cmd == "security":
+        data = analyze_usb_security(args.directory)
+        if args.ai:
+            from .glm import summarize
+            data["ai_assessment"] = summarize(data)
+        write_report(data, args.out)
+        print(json.dumps(data, indent=2))
     elif args.cmd == "unisoc":
         result = inspect_pac(args.pac) if args.action == "inspect" else extract_pac(args.pac, args.destination)
         print(result)
@@ -70,8 +93,17 @@ def main():
     elif args.cmd == "sparse":
         print(expand_sparse(args.image, args.output))
     elif args.cmd == "gpt":
-        result = extract_gpt_partitions(args.image, args.extract, args.sector_size) if args.extract else inspect_gpt(args.image, args.sector_size)
-        print(result)
+        result = inspect_gpt(args.image, args.sector_size)
+        if args.csv:
+            args.csv.parent.mkdir(parents=True, exist_ok=True)
+            fields = ["index", "name", "type_guid", "guid", "first_lba", "last_lba", "offset", "size", "attributes"]
+            with args.csv.open("w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=fields)
+                writer.writeheader()
+                writer.writerows(result["partitions"])
+        if args.extract:
+            result["extracted"] = extract_gpt_partitions(args.image, args.extract, args.sector_size)
+        print(json.dumps(result, indent=2))
     elif args.cmd == "super":
         print(unpack_super(args.image, args.destination, args.timeout))
     elif args.cmd == "ota":

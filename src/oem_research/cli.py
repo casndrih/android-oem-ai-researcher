@@ -12,6 +12,7 @@ from .qualcomm import extract_qualcomm
 from .sparse import expand_sparse
 from .gpt import inspect_gpt, extract_gpt_partitions
 from .ota_payload import inspect_payload, extract_payload
+from .super_image import unpack_super
 
 def main():
     p = argparse.ArgumentParser(prog="droidsec")
@@ -39,7 +40,8 @@ def main():
     sp.add_argument("image", type=Path); sp.add_argument("output", type=Path)
     gp = sub.add_parser("gpt")
     gp.add_argument("image", type=Path); gp.add_argument("--sector-size", type=int, default=512); gp.add_argument("--extract", type=Path)
-    ot = sub.add_parser("ota")
+    su = sub.add_parser("super")
+    su.add_argument("image", type=Path); su.add_argument("destination", type=Path); su.add_argument("--timeout", type=int, default=600)\n    ot = sub.add_parser("ota")
     ots = ot.add_subparsers(dest="action", required=True)
     oti = ots.add_parser("inspect"); oti.add_argument("payload", type=Path)
     ote = ots.add_parser("extract"); ote.add_argument("payload", type=Path); ote.add_argument("destination", type=Path)
@@ -69,7 +71,7 @@ def main():
     elif args.cmd == "gpt":
         result = extract_gpt_partitions(args.image, args.extract, args.sector_size) if args.extract else inspect_gpt(args.image, args.sector_size)
         print(result)
-    elif args.cmd == "ota":
+    elif args.cmd == "super":\n        print(unpack_super(args.image, args.destination, args.timeout))\n    elif args.cmd == "ota":
         result = inspect_payload(args.payload) if args.action == "inspect" else extract_payload(args.payload, args.destination)
         print(result)
 

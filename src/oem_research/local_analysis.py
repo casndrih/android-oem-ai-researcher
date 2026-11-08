@@ -69,7 +69,7 @@ def analyze_local(source: Path, out: Path, use_ai: bool = False,
                   components_json: Path | None = None,
                   bulletin_file: Path | None = None,
                   max_files: int = 100000,
-                  max_total_bytes: int = 20 * 1024 * 1024 * 1024) -> dict:
+                  max_total_bytes: int = 20 * 1024 * 1024 * 1024,\n                  ai_base_url: str | None = None,\n                  ai_model: str | None = None) -> dict:
     """Analyze an extracted firmware directory or a single Unisoc PAC file."""
     source, out = Path(source).resolve(), Path(out).resolve()
     if not source.exists():
@@ -99,7 +99,7 @@ def analyze_local(source: Path, out: Path, use_ai: bool = False,
     source_sha256 = _sha256(source) if source.is_file() else None
     device_report = build_device_report(
         analysis_root, cve_json=cve_json, use_ai=use_ai,
-        components_json=components_json, bulletin_file=bulletin_file,
+        components_json=components_json, bulletin_file=bulletin_file,\n        ai_base_url=ai_base_url, ai_model=ai_model,
     )
     result = {
         "product": "DroidSec AI",

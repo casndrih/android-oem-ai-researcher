@@ -170,3 +170,22 @@ An optional component inventory can be supplied to `device-report`:
 ```
 
 Run `droidsec device-report ./firmware --cve-json ./nvd.json --components-json ./components.json --ai`. Numeric dotted component versions are compared with NVD inclusive/exclusive bounds. Non-numeric OEM build strings are marked unknown; a CPE/version candidate is not proof of vulnerability because vendor backports and product-specific patching must be checked.
+
+
+## USBPcap capture ingestion and bulletin correlation
+
+DroidSec accepts classic PCAP and PCAPNG files with USBPcap link type 249. It validates capture framing, extracts USB bulk payloads, separates streams by bus/device/endpoint/direction, and attempts structural MTP/ADB decoding. Other link types are inventoried but not dissected; URB pairing and all USB transfer edge cases are not yet reconstructed.
+
+```bash
+droidsec capture authorized-usb-capture.pcapng --protocol both --out reports/capture
+```
+
+For Android Security Bulletin correlation, save the official bulletin HTML or text locally and provide it to the device dossier:
+
+```bash
+droidsec device-report ./extracted_firmware --cve-json ./nvd.json \
+  --components-json ./components.json --bulletin ./android-security-bulletin.html \
+  --ai --out reports/device
+```
+
+The bulletin parser extracts CVE identifiers and date tokens and cross-references the existing NVD candidate set. It does not infer that a device is vulnerable merely because a CVE appears in a bulletin, or that a device is patched solely from its SPL. Official Android bulletin sources: https://source.android.com/docs/security/bulletin/asb-overview

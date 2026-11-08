@@ -32,9 +32,9 @@ def analyze_usb_security(root: Path) -> dict:
             ev = f"{rel}:{n}: {line.strip()[:240]}"
             if re.search(r"persist\.service\.adb\.enable\s*=\s*1|service\.adb\.root\s*=\s*1", low):
                 adb_enabled.append(ev)
-            if re.search(r"service\.adb\.tcp\.port\s*=\s*(?!-1\b)\d+", low) or "tcp:5555" in low:
+            if re.search(r"service\.adb\.tcp\.port\s*(?:=\s*|\s+)(?!-1\b)\d+", low) or re.search(r"setprop\s+service\.adb\.tcp\.port\s+\d+", low) or "tcp:5555" in low:
                 adb_tcp.append(ev)
-            if re.search(r"ro\.adbd\.secure\s*=\s*0|ro\.debuggable\s*=\s*1", low):
+            if re.search(r"ro\.adbd\.secure\s*=\s*0|ro\.debuggable\s*=\s*1", low) or re.search(r"setprop\s+ro\.adbd\.secure\s+0", low):
                 adb_auth_disabled.append(ev)
             if "mtp" in low or "media_transfer" in low:
                 mtp_refs.append(ev)

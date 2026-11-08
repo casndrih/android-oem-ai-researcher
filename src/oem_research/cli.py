@@ -72,7 +72,9 @@ def main():
     elif args.cmd == "gpt":
         result = extract_gpt_partitions(args.image, args.extract, args.sector_size) if args.extract else inspect_gpt(args.image, args.sector_size)
         print(result)
-    elif args.cmd == "super":\n        print(unpack_super(args.image, args.destination, args.timeout))\n    elif args.cmd == "ota":
+    elif args.cmd == "super":
+        print(unpack_super(args.image, args.destination, args.timeout))
+    elif args.cmd == "ota":
         result = inspect_payload(args.payload) if args.action == "inspect" else extract_payload(args.payload, args.destination)
         print(result)
 

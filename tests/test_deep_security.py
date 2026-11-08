@@ -35,3 +35,18 @@ def test_unified_device_report(tmp_path: Path):
     result=build_device_report(tmp_path)
     assert result["device"]["properties"]["model"]=="SM-A556E"
     assert "selinux" in result and "protocol_surface" in result and "cve_correlation" in result
+
+
+def test_cve_component_version_range_assessment(tmp_path: Path):
+    db={"vulnerabilities":[{"cve":{"id":"CVE-2025-1111","descriptions":[{"lang":"en","value":"range test"}],
+      "configurations":[{"nodes":[{"cpeMatch":[{"vulnerable":True,
+      "criteria":"cpe:2.3:o:samsung:sm-a556e_firmware:*:*:*:*:*:*:*:*",
+      "versionStartIncluding":"1.0","versionEndExcluding":"2.0"}]}]}]}}]}
+    nvd=tmp_path/"nvd.json"; nvd.write_text(json.dumps(db))
+    inv=tmp_path/"components.json"; inv.write_text(json.dumps({"components":[
+      {"name":"SM-A556E firmware","version":"1.5"}]}))
+    result=correlate_nvd(tmp_path,nvd,{"properties":{"model":"SM-A556E"}},inv)
+    assert result["matches"][0]["component_checks"][0]["version_assessment"]=="affected"
+    inv.write_text(json.dumps({"components":[{"name":"SM-A556E firmware","version":"2.1"}]}))
+    result=correlate_nvd(tmp_path,nvd,{"properties":{"model":"SM-A556E"}},inv)
+    assert result["matches"][0]["assessment"]=="version-outside-range"

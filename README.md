@@ -69,7 +69,7 @@ The core application now has **zero third-party Python runtime dependencies**. C
     python3 droidsec.py vendors
     python3 droidsec.py analyze-local ./firmware_tree --out ./reports/sample
 
-On Windows PowerShell use `py -3 droidsec.py vendors`, or run `droidsec.bat vendors` from Command Prompt. On WSL2, use `./droidsec vendors`.
+On Windows PowerShell use `py -3 droidsec.py vendors`, or run `droidsec.bat vendors` from Command Prompt. On WSL2, use `python3 droidsec.py vendors` (or `sh ./droidsec vendors`).
 
 See [docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md) for the offline workflow and optional host utilities. `pytest` is only needed for developer testing; CI installs it separately.
 

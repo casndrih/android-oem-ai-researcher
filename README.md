@@ -96,3 +96,38 @@ For large real-world OTA test data, Google publishes official device OTA package
 
 
 See [`docs/REAL_FIRMWARE_VALIDATION.md`](docs/REAL_FIRMWARE_VALIDATION.md) for candidate public sources, provenance requirements, and the acceptance criteria for claiming real-firmware compatibility.
+
+
+## Deep device security assessment
+
+Build a combined device-specific report from an extracted firmware tree:
+
+```bash
+droidsec device-report ./extracted_firmware --out reports/device
+droidsec device-report ./extracted_firmware --cve-json ./nvd-cves.json --out reports/device
+droidsec device-report ./extracted_firmware --cve-json ./nvd-cves.json --ai --out reports/device-ai
+```
+
+The unified report includes:
+- Device identity and evidence-backed fingerprint confidence.
+- ADB and MTP source/configuration attack-surface references.
+- SELinux source policy triage (permissive domains, wildcard-like allow rules, ADB/shell and USB/MTP policy references).
+- Optional offline CVE candidate correlation against a user-supplied NVD JSON 2.0 export, using device identity tokens and CPE criteria.
+- Optional GLM analysis through `OPENAI_BASE_URL`, `OPENAI_API_KEY` and the configured model. AI is instructed to separate confirmed evidence, hypotheses, false-positive possibilities and unknowns.
+
+Install AI support with `pip install -e ".[ai]"`. Set `OPENAI_BASE_URL`, `OPENAI_API_KEY` and optionally adapt the model name in the report integration to your provider.
+
+### CVE matching caveats
+
+NVD JSON 2.0 exports can be obtained from the NVD data feeds/API and supplied locally. Current matching is deliberately candidate generation using device identity tokens against CPE criteria; it does not assert that a CVE affects a device. Validate exact model, Android release, kernel/vendor component version, affected version ranges, OEM backports and the OEM security bulletin. An Android security patch level is not sufficient by itself to infer all component fixes.
+
+### Research foundations and external tools studied
+
+- [libmtp](https://github.com/libmtp/libmtp) documents MTP initiator behavior, device quirks and Android responder references. DroidSec uses it as protocol context; it does not embed or fuzz libmtp.
+- [Android frameworks/base](https://android.googlesource.com/platform/frameworks/base/) contains the Android framework-side MTP implementation; match the source revision to the firmware build before drawing conclusions.
+- [FICS BigMAC](https://github.com/FICS/BigMAC) demonstrates firmware-oriented Android DAC/MAC/SELinux policy recovery and querying. It has substantial legacy build dependencies, so DroidSec implements a lightweight source triage and recommends SETools for authoritative compiled-policy queries.
+- [SELinuxProject tools](https://github.com/SELinuxProject/selinux/wiki/Tools) documents SETools capabilities such as `seinfo`, `sesearch`, `sediff` and domain-transition analysis.
+- [Android Security Bulletins](https://source.android.com/docs/security/bulletin/asb-overview) provide monthly patch-level and component vulnerability information; use OEM bulletins for vendor-specific backports.
+- [AOSP system/core](https://android.googlesource.com/platform/system/core/) provides ADB daemon and USB composition implementation context. Always use a source revision corresponding to the target build.
+
+The protocol inventory is static. It does not connect to USB devices, send ADB commands, fuzz MTP, bypass pairing, or execute exploits. SELinux text triage does not replace parsing the compiled policy with SETools. NVD CPE matches are candidates, not confirmed affected-device findings. Dynamic validation requires an isolated, authorized test device and explicit human approval.

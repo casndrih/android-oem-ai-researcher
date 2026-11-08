@@ -143,3 +143,14 @@ droidsec adb-trace authorized-adb-stream.bin --out reports/adb
 ```
 
 The decoders validate lengths, frame boundaries, MTP transaction references, ADB command magic, payload bounds, and legacy checksums. Malformed input is reported as evidence rather than repaired. They are protocol-structure triage tools, not complete protocol conformance or exploitability tests.
+
+
+## Compiled SELinux policy queries (optional SETools)
+
+For an explicitly supplied compiled policy file, install SETools on the analysis host and run:
+
+```bash
+droidsec selinux-compiled ./vendor/etc/selinux/precompiled_sepolicy --out reports/selinux-compiled
+```
+
+The adapter invokes `seinfo --stats` and focused `sesearch` allow-rule queries for `adbd` and `mtp`, with no shell, a bounded timeout, and no policy modification. If SETools is absent, it reports that the optional tools are unavailable. Binary policy support depends on the SETools build and Android policy version; review output and errors rather than treating a successful parse as a runtime security verdict.

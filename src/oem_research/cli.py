@@ -42,6 +42,11 @@ def main():
     dr.add_argument("--ai", action="store_true", help="Add GLM/OpenAI-compatible evidence assessment")
     dr.add_argument("--out", type=Path, default=Path("reports/device-security"))
 
+    mtp = sub.add_parser("mtp-trace", help="Decode a raw MTP container stream from an authorized capture")
+    mtp.add_argument("capture", type=Path); mtp.add_argument("--out", type=Path, default=Path("reports/mtp-trace"))
+    adb = sub.add_parser("adb-trace", help="Decode a raw ADB transport stream from an authorized capture")
+    adb.add_argument("capture", type=Path); adb.add_argument("--out", type=Path, default=Path("reports/adb-trace"))
+
     up = sub.add_parser("unisoc")
     ups = up.add_subparsers(dest="action", required=True)
     upi = ups.add_parser("inspect"); upi.add_argument("pac", type=Path)
@@ -88,6 +93,17 @@ def main():
             data["ai_assessment"] = summarize(data)
         write_report(data, args.out)
         print(json.dumps(data, indent=2))
+    elif args.cmd == "mtp-trace":
+        from .mtp_trace import decode_mtp_file
+        result = decode_mtp_file(args.capture)
+        write_report(result, args.out)
+        print(json.dumps(result, indent=2))
+    elif args.cmd == "adb-trace":
+        from .adb_trace import decode_adb_file
+        result = decode_adb_file(args.capture)
+        write_report(result, args.out)
+        print(json.dumps(result, indent=2))
+
     elif args.cmd == "unisoc":
         result = inspect_pac(args.pac) if args.action == "inspect" else extract_pac(args.pac, args.destination)
         print(result)

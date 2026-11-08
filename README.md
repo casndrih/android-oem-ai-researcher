@@ -1,28 +1,40 @@
 # DroidSec AI — Android OEM Firmware Security Researcher
 
-Python toolkit for evidence-led, offline Android OEM firmware analysis. It inventories firmware, identifies image formats, calculates SHA-256 hashes, extracts supported package payloads and creates reports.
+Python toolkit for evidence-led offline Android OEM firmware analysis and extraction.
 
-## v0.3 extraction adapters
+## v0.4 capabilities
 
 ### Unisoc / Spreadtrum PAC
     droidsec unisoc inspect firmware.pac
     droidsec unisoc extract firmware.pac extracted/unisoc
-
-Implements a validated PAC header/file-record parser for the documented PAC layout. PAC revisions vary; malformed or incompatible layouts fail closed.
+PAC record layout is revision-dependent; unsupported revisions fail closed.
 
 ### MediaTek (MTK)
     droidsec mtk ./firmware_directory ./extracted/mtk
     droidsec mtk firmware_package.zip ./extracted/mtk
-    droidsec mtk ./firmware_directory ./extracted/mtk --scatter ./MTK_Android_scatter.txt
-
-Parses scatter partition records and extracts referenced image files marked for download. Directory and ZIP packages are supported. Scatter XML variants and vendor-specific wrappers are not yet supported.
+    droidsec mtk ./firmware_directory ./extracted/mtk --scatter ./MTK_scatter.txt
+Parses scatter records and copies referenced partition images. Scatter XML variants/vendor wrappers remain unsupported.
 
 ### Qualcomm QFIL / Firehose
     droidsec qualcomm ./QFIL_Firmware ./extracted/qualcomm
     droidsec qualcomm firmware_package.zip ./extracted/qualcomm
     droidsec qualcomm ./QFIL_Firmware ./extracted/qualcomm --rawprogram ./rawprogram0.xml
+Parses rawprogram XML and extracts referenced files. It does not execute Firehose programmers or apply patch XML.
 
-Parses rawprogram XML and extracts referenced images. Patch XML is not executed; Firehose programmers are never launched. Sparse-image reassembly is not included yet.
+### Android sparse image expansion
+    droidsec sparse system.img system-expanded.img
+Supports RAW, FILL, DONT_CARE and CRC32 chunks, with output-size and structural validation.
+
+### GPT partition table inspection/extraction
+    droidsec gpt disk.img
+    droidsec gpt disk.img --sector-size 4096
+    droidsec gpt disk.img --extract ./gpt_partitions
+Reads GPT entries from a raw disk image and can extract the described partition ranges. It does not repair or modify the source disk.
+
+### Android OTA payload.bin
+    droidsec ota inspect payload.bin
+    droidsec ota extract payload.bin ./ota_partitions
+Reads the CrAU header and protobuf manifest. Extraction supports REPLACE, REPLACE_BZ and ZERO operations. Delta operations requiring source partitions and specialized codecs are skipped; this is not yet a complete update_engine implementation. Verify output images before further analysis.
 
 ## Other commands
     droidsec vendors
@@ -42,7 +54,7 @@ Parses rawprogram XML and extracts referenced images. Patch XML is not executed;
     pytest
 
 ## GLM API
-Install the optional dependency with `pip install -e '.[ai]'`, then set `OPENAI_API_KEY` and `OPENAI_BASE_URL`. Never commit credentials. Model output is advisory and must be grounded in collected evidence.
+Install `pip install -e '.[ai]'`, then set `OPENAI_API_KEY` and `OPENAI_BASE_URL`. Never commit credentials. Model output is advisory and must be grounded in collected evidence.
 
 ## Safety and limitations
-All extractors operate offline on local files. No device connection, flashing, bootloader unlocking, exploitation, programmer execution, or partition writes are performed. Extraction support is format-revision dependent; validate against authorized real firmware samples before relying on results. A successful file extraction does not establish firmware authenticity or safety.
+All extractors operate offline on local files. No device connection, flashing, bootloader unlocking, exploitation, programmer execution, or partition writes are performed. Format support is revision-dependent; validate with authorized real firmware samples. This is a research toolkit, not a universal firmware unpacker.

@@ -31,7 +31,7 @@ def test_local_directory_analysis_writes_report_and_hashes(tmp_path, monkeypatch
 def test_local_analysis_rejects_non_pac_file(tmp_path):
     source = tmp_path / "firmware.bin"
     source.write_bytes(b"not a PAC")
-    with pytest.raises(ValueError, match="\.pac"):
+    with pytest.raises(ValueError, match=r"\.pac"):
         analyze_local(source, tmp_path / "reports")
 
 
@@ -60,3 +60,22 @@ def test_local_analysis_skips_symlinked_files(tmp_path, monkeypatch):
     monkeypatch.setattr(local_analysis, "build_device_report", lambda *a, **k: {"device": {}})
     result = analyze_local(firmware, tmp_path / "reports")
     assert [row["path"] for row in result["files"]] == ["safe.txt"]
+
+
+def test_local_analysis_orchestrates_pac_extraction(tmp_path, monkeypatch):
+    from oem_research import local_analysis
+
+    pac = tmp_path / "sample.pac"
+    pac.write_bytes(b"synthetic PAC placeholder")
+    def fake_inspect(path):
+        return [{"partition": "system", "filename": "system.img", "offset": 0, "size": 4}]
+    def fake_extract(path, destination):
+        (destination / "system.img").write_bytes(b"TEST")
+        return [{"partition": "system", "file": str(destination / "system.img"), "size": 4}]
+    monkeypatch.setattr(local_analysis, "inspect_pac", fake_inspect)
+    monkeypatch.setattr(local_analysis, "extract_pac", fake_extract)
+    monkeypatch.setattr(local_analysis, "build_device_report", lambda *a, **k: {"device": {}})
+    result = analyze_local(pac, tmp_path / "reports")
+    assert result["pac"]["parsed"] is True
+    assert result["pac"]["record_count"] == 1
+    assert (tmp_path / "reports" / "pac_extracted" / "system.img").read_bytes() == b"TEST"

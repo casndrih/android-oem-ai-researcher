@@ -20,7 +20,7 @@ def fingerprint_firmware(root: Path) -> dict:
     values, sources = {}, {}
     scanned = 0
     for path in root.rglob("*"):
-        if not path.is_file() or path.name.lower() not in PROP_FILES:
+        if path.is_symlink() or not path.is_file() or path.name.lower() not in PROP_FILES:
             continue
         try:
             if path.stat().st_size > 2 * 1024 * 1024:

@@ -31,10 +31,10 @@ Supports RAW, FILL, DONT_CARE and CRC32 chunks, with output-size and structural 
     droidsec gpt disk.img --extract ./gpt_partitions
 Reads GPT entries from a raw disk image and can extract the described partition ranges. It does not repair or modify the source disk.
 
-### Android OTA payload.bin
+### Android dynamic super image\n    droidsec super super.img ./super_partitions\nUses the separately installed AOSP `lpunpack` utility (must be on PATH) to extract logical partitions from a dynamic super image. The wrapper invokes it without a shell and enforces a timeout. Use a sandbox for untrusted firmware.\n\n### Android OTA payload.bin
     droidsec ota inspect payload.bin
     droidsec ota extract payload.bin ./ota_partitions
-Reads the CrAU header and protobuf manifest. Extraction supports REPLACE, REPLACE_BZ and ZERO operations. Delta operations requiring source partitions and specialized codecs are skipped; this is not yet a complete update_engine implementation. Verify output images before further analysis.
+Reads the CrAU header and protobuf manifest. Extraction supports REPLACE, REPLACE_BZ, REPLACE_XZ and ZERO operations. Delta operations requiring source partitions and specialized codecs are skipped; this is not yet a complete update_engine implementation. Verify output images before further analysis.
 
 ## Other commands
     droidsec vendors

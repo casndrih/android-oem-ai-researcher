@@ -42,6 +42,9 @@ def main():
     dr.add_argument("--ai", action="store_true", help="Add GLM/OpenAI-compatible evidence assessment")
     dr.add_argument("--out", type=Path, default=Path("reports/device-security"))
 
+    se = sub.add_parser("selinux-compiled", help="Query an explicitly supplied compiled SELinux policy using SETools")
+    se.add_argument("policy", type=Path); se.add_argument("--timeout", type=int, default=30)
+    se.add_argument("--out", type=Path, default=Path("reports/selinux-compiled"))
     mtp = sub.add_parser("mtp-trace", help="Decode a raw MTP container stream from an authorized capture")
     mtp.add_argument("capture", type=Path); mtp.add_argument("--out", type=Path, default=Path("reports/mtp-trace"))
     adb = sub.add_parser("adb-trace", help="Decode a raw ADB transport stream from an authorized capture")
@@ -93,6 +96,11 @@ def main():
             data["ai_assessment"] = summarize(data)
         write_report(data, args.out)
         print(json.dumps(data, indent=2))
+    elif args.cmd == "selinux-compiled":
+        from .setools_adapter import inspect_compiled_policy
+        result = inspect_compiled_policy(args.policy, args.timeout)
+        write_report(result, args.out)
+        print(json.dumps(result, indent=2))
     elif args.cmd == "mtp-trace":
         from .mtp_trace import decode_mtp_file
         result = decode_mtp_file(args.capture)

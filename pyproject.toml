@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "droidsec-ai"
+version = "0.2.0"
+description = "Evidence-led Android OEM firmware security research toolkit"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+ai = ["openai>=1.30"]
+[project.scripts]
+droidsec = "oem_research.cli:main"
+[tool.setuptools.packages.find]
+where = ["src"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]

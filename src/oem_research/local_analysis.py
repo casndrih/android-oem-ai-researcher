@@ -86,8 +86,8 @@ def analyze_local(source: Path, out: Path, use_ai: bool = False,
     elif not source.is_dir():
         raise ValueError("Input must be a regular firmware directory or .pac file")
 
-    if out == analysis_root or out in analysis_root.parents:
-        raise ValueError("Report output must not contain or equal the firmware analysis input")
+    if source.is_dir() and (out == source or source in out.parents):
+        raise ValueError("Report output must be outside the firmware source directory")
     out.mkdir(parents=True, exist_ok=True)
 
     files = _inventory(analysis_root, max_files)

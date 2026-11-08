@@ -115,7 +115,8 @@ def extract_payload(path: Path, destination: Path) -> list[dict]:
                     if op["data_hash"] and hashlib.sha256(raw).digest()!=op["data_hash"]: raise ValueError("OTA operation data hash mismatch")
                     if typ==0: decoded=raw
                     elif typ==1: decoded=bz2.decompress(raw)
-                    elif typ==8: decoded=lzma.decompress(raw, format=lzma.FORMAT_XZ)\n                    else: decoded=b""
+                    elif typ==8: decoded=lzma.decompress(raw, format=lzma.FORMAT_XZ)
+                    else: decoded=b""
                     expected=sum(count for _,count in op["dst_extents"])*block
                     if typ in (0,1,8) and len(decoded)!=expected: raise ValueError(f"Decoded OTA operation length mismatch in {safe}")
                     cursor=0

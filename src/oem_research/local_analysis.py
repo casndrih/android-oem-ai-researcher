@@ -42,11 +42,15 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _inventory(root: Path, max_files: int) -> list[dict]:
+def _inventory(root: Path, max_files: int, max_total_bytes: int) -> list[dict]:
     rows = []
+    total_bytes = 0
     for path in _walk_regular_files(root, max_files):
         try:
             stat = path.stat()
+            total_bytes += stat.st_size
+            if total_bytes > max_total_bytes:
+                raise ValueError(f"Total input-size limit exceeded ({max_total_bytes} bytes)")
             name = path.name.lower()
             hints = [hint for hint in PARTITION_HINTS if hint in name]
             rows.append({
@@ -64,13 +68,14 @@ def analyze_local(source: Path, out: Path, use_ai: bool = False,
                   cve_json: Path | None = None,
                   components_json: Path | None = None,
                   bulletin_file: Path | None = None,
-                  max_files: int = 100000) -> dict:
+                  max_files: int = 100000,
+                  max_total_bytes: int = 20 * 1024 * 1024 * 1024) -> dict:
     """Analyze an extracted firmware directory or a single Unisoc PAC file."""
     source, out = Path(source).resolve(), Path(out).resolve()
     if not source.exists():
         raise FileNotFoundError(source)
-    if max_files < 1:
-        raise ValueError("max_files must be positive")
+    if max_files < 1 or max_total_bytes < 1:
+        raise ValueError("max_files and max_total_bytes must be positive")
 
     pac_records = []
     analysis_root = source
@@ -90,7 +95,8 @@ def analyze_local(source: Path, out: Path, use_ai: bool = False,
         raise ValueError("Report output must be outside the firmware source directory")
     out.mkdir(parents=True, exist_ok=True)
 
-    files = _inventory(analysis_root, max_files)
+    files = _inventory(analysis_root, max_files, max_total_bytes)
+    source_sha256 = _sha256(source) if source.is_file() else None
     device_report = build_device_report(
         analysis_root, cve_json=cve_json, use_ai=use_ai,
         components_json=components_json, bulletin_file=bulletin_file,
@@ -99,7 +105,9 @@ def analyze_local(source: Path, out: Path, use_ai: bool = False,
         "product": "DroidSec AI",
         "workflow": "local-first-read-only",
         "source": str(source),
+        "source_sha256": source_sha256,
         "analysis_root": str(analysis_root),
+        "inventory_total_bytes": sum(row.get("size_bytes", 0) for row in files),
         "source_firmware_modified": False,
         "device": device_report.get("device", {}),
         "pac": {

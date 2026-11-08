@@ -58,3 +58,20 @@ Install `pip install -e '.[ai]'`, then set `OPENAI_API_KEY` and `OPENAI_BASE_URL
 
 ## Safety and limitations
 All extractors operate offline on local files. No device connection, flashing, bootloader unlocking, exploitation, programmer execution, or partition writes are performed. Format support is revision-dependent; validate with authorized real firmware samples. This is a research toolkit, not a universal firmware unpacker.
+
+
+## Regression fixtures and upstream format references
+
+Small, hand-authored parser fixtures live under `tests/fixtures/`:
+- `tests/fixtures/mtk/MT6789_Android_scatter.txt` — representative MediaTek scatter syntax.
+- `tests/fixtures/qualcomm/rawprogram0.xml` — representative Qualcomm QFIL rawprogram syntax.
+
+These are compact synthetic regression fixtures, **not OEM-distributed firmware dumps**. CI tests exercise parser behavior and safe extraction using generated image payloads. Large vendor firmware binaries are not committed to this repository.
+
+Useful public upstream references for format validation:
+- Unisoc PAC tooling and parser examples: https://github.com/DiegoPtit/unisoc_tools
+- Qualcomm QFIL sparse-image tooling (Lenovo Tab4 8 Plus validation noted upstream): https://github.com/NHellFire/android-qfil-unsparse
+- Android OTA payload dumper with Google Pixel OTA sample reference: https://github.com/ssut/payload-dumper-go
+- Android OTA payload format schema: https://android.googlesource.com/platform/system/update_engine/+/master/update_metadata.proto
+
+For large real-world OTA test data, Google publishes official device OTA packages at https://developers.google.com/android/ota. Download only the exact device package you intend to validate; these can be multi-gigabyte files.

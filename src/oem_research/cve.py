@@ -70,7 +70,7 @@ def correlate_nvd(root: Path, nvd_json: Path|None, device: dict|None=None,
     components=[]
     if components_json:
         loaded=json.loads(Path(components_json).read_text(encoding="utf-8"))
-        components=loaded.get("components",loaded if isinstance(loaded,list) else [])
+        components=loaded if isinstance(loaded,list) else loaded.get("components",[]) if isinstance(loaded,dict) else None
         if not isinstance(components,list): raise ValueError("Component inventory must be a JSON list or an object with a components list")
     vulns=data.get("vulnerabilities",[]); matches=[]
     for item in vulns:

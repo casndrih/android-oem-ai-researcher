@@ -1,6 +1,6 @@
 """Read-only GPT partition table parser for raw disk images."""
 from pathlib import Path
-import struct
+import struct, zlib
 
 def inspect_gpt(path: Path, sector_size: int=512) -> dict:
     path=Path(path)
@@ -10,12 +10,12 @@ def inspect_gpt(path: Path, sector_size: int=512) -> dict:
         h=f.read(92)
         if len(h)<92 or h[:8]!=b"EFI PART": raise ValueError("GPT header signature not found at LBA 1")
         revision,header_size,header_crc,reserved,current,backup,first,last,disk_guid,entries_lba,count,entry_size,entries_crc=struct.unpack_from("<IIIIQQQQ16sQIII",h,8)
-        if header_size<92 or header_size>sector_size: raise ValueError("Invalid GPT header size")
+        if header_size<92 or header_size>sector_size: raise ValueError("Invalid GPT header size")\n        header=h[:header_size]\n        header=header[:16]+b"\\0\\0\\0\\0"+header[20:]\n        if zlib.crc32(header)&0xffffffff != header_crc: raise ValueError("GPT header CRC mismatch")
         if entry_size<128 or entry_size>4096 or count>16384: raise ValueError("Invalid GPT entry geometry")
         if entries_lba*sector_size + count*entry_size > path.stat().st_size: raise ValueError("GPT entries extend beyond image")
         f.seek(entries_lba*sector_size)
         raw=f.read(count*entry_size)
-        if len(raw)!=count*entry_size: raise ValueError("Truncated GPT entries")
+        if len(raw)!=count*entry_size: raise ValueError("Truncated GPT entries")\n        if zlib.crc32(raw)&0xffffffff != entries_crc: raise ValueError("GPT partition-entry array CRC mismatch")
     rows=[]
     for i in range(count):
         e=raw[i*entry_size:(i+1)*entry_size]

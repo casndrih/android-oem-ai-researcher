@@ -21,7 +21,7 @@ def analyze_selinux(root: Path) -> dict:
                 permissive.append(ev)
             if re.search(r"^\s*allow\s+",s):
                 allow_count+=1
-                if re.search(r"\*\s*:\s*\*\s*\*|\{\s*[^}]*\*[^}]*\s*\}",s):
+                if re.search(r"\*\s*:\s*\*\s*\*|:\s*[\w.]+\s+\*\s*;|\{\s*[^}]*\*[^}]*\s*\}",s):
                     broad.append(ev)
                 if re.search(r"(?:mtp|media_rw|usb|adbd)",s,re.I): usb.append(ev)
                 if re.search(r"adbd|shell",s,re.I): adb.append(ev)

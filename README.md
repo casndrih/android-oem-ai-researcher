@@ -214,7 +214,7 @@ droidsec analyze-local ./R2406_firmware.pac \
   --ai --cve-json ./nvd.json --out ./reports/polytron-r2406
 ```
 
-The command creates `report.json` and `report.md`, containing file sizes and SHA-256 hashes, filename-based partition hints, device fingerprint evidence, ADB/MTP static review, SELinux source-policy triage, and optional CVE/bulletin/AI results. For a PAC input, it also parses the PAC table and extracts payloads into the report directory's `pac_extracted/` folder. It refuses to overwrite an existing PAC extraction folder.
+The command creates `report.json` and `report.md`, containing the source PAC SHA-256 (when applicable), file sizes and SHA-256 hashes, aggregate inventory size, filename-based partition hints, device fingerprint evidence, ADB/MTP static review, SELinux source-policy triage, and optional CVE/bulletin/AI results. File-count and aggregate-byte limits are configurable to keep local analysis bounded. For a PAC input, it also parses the PAC table and extracts payloads into the report directory's `pac_extracted/` folder. It refuses to overwrite an existing PAC extraction folder.
 
 ### Handling the R2406 .7z sample
 

@@ -154,3 +154,19 @@ droidsec selinux-compiled ./vendor/etc/selinux/precompiled_sepolicy --out report
 ```
 
 The adapter invokes `seinfo --stats` and focused `sesearch` allow-rule queries for `adbd` and `mtp`, with no shell, a bounded timeout, and no policy modification. If SETools is absent, it reports that the optional tools are unavailable. Binary policy support depends on the SETools build and Android policy version; review output and errors rather than treating a successful parse as a runtime security verdict.
+
+
+### Component-aware CVE correlation
+
+An optional component inventory can be supplied to `device-report`:
+
+```json
+{
+  "components": [
+    {"name": "Android kernel", "version": "5.10.198", "cpe": "cpe:2.3:o:vendor:product:*:*:*:*:*:*:*:*"},
+    {"name": "libmtp", "version": "1.1.20"}
+  ]
+}
+```
+
+Run `droidsec device-report ./firmware --cve-json ./nvd.json --components-json ./components.json --ai`. Numeric dotted component versions are compared with NVD inclusive/exclusive bounds. Non-numeric OEM build strings are marked unknown; a CPE/version candidate is not proof of vulnerability because vendor backports and product-specific patching must be checked.

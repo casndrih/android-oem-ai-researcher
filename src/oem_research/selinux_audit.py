@@ -7,7 +7,7 @@ def analyze_selinux(root: Path) -> dict:
     if not root.is_dir(): raise ValueError("SELinux analysis requires an extracted firmware directory")
     findings=[]; scanned=0; allow_count=0; permissive=[]; broad=[]; usb=[]; adb=[]
     for p in root.rglob("*"):
-        if not p.is_file() or (p.suffix.lower() not in TEXT_SUFFIXES and p.name not in {"sepolicy","plat_sepolicy.cil","vendor_sepolicy.cil"}): continue
+        if p.is_symlink() or not p.is_file() or (p.suffix.lower() not in TEXT_SUFFIXES and p.name not in {"sepolicy","plat_sepolicy.cil","vendor_sepolicy.cil"}): continue
         try:
             if p.stat().st_size>8*1024*1024: continue
             data=p.read_text(encoding="utf-8",errors="ignore")

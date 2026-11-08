@@ -50,7 +50,7 @@ def _pcapng(data):
         body=block[8:-4]
         if block_type==1: # Interface Description Block
             if len(body)<8: raise ValueError("Truncated PCAPNG interface block")
-            link,snap=struct.unpack_from(endian+"HHI",body,0)
+            link,_reserved,snap=struct.unpack_from(endian+"HHI",body,0)
             interfaces.append({"linktype":link,"snaplen":snap})
         elif block_type==6: # Enhanced Packet Block
             if len(body)<20: raise ValueError("Truncated PCAPNG enhanced packet block")

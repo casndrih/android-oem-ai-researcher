@@ -5,7 +5,7 @@ from .usb_security import analyze_usb_security
 from .mtp_adb_audit import audit_protocol_surface
 from .selinux_audit import analyze_selinux
 from .cve import correlate_nvd
-def build_device_report(root: Path, cve_json: Path|None=None, use_ai: bool=False, components_json: Path|None=None)->dict:
+def build_device_report(root: Path, cve_json: Path|None=None, use_ai: bool=False, components_json: Path|None=None, bulletin_file: Path|None=None)->dict:
     root=Path(root)
     device=fingerprint_firmware(root)
     report={"product":"DroidSec AI","schema_version":"1.0","device":device,

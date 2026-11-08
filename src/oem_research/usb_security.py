@@ -17,7 +17,7 @@ def analyze_usb_security(root: Path) -> dict:
     findings, scanned = [], 0
     adb_enabled, adb_tcp, adb_auth_disabled, mtp_refs, usb_props = [], [], [], [], []
     for path in root.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
+        if path.is_symlink() or not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
             continue
         try:
             if path.stat().st_size > TEXT_LIMIT:

@@ -1,0 +1,21 @@
+############################################################################################################
+# General Setting
+############################################################################################################
+- partition_index: SYS0
+  partition_name: boot
+  file_name: boot.img
+  is_download: true
+  linear_start_addr: 0x0000000000008000
+  physical_start_addr: 0x0000000000008000
+  partition_size: 0x0000000002000000
+  region: EMMC_USER
+  storage: HW_STORAGE_EMMC
+- partition_index: SYS1
+  partition_name: vbmeta
+  file_name: vbmeta.img
+  is_download: true
+  linear_start_addr: 0x0000000002008000
+  physical_start_addr: 0x0000000002008000
+  partition_size: 0x0000000000008000
+  region: EMMC_USER
+  storage: HW_STORAGE_EMMC

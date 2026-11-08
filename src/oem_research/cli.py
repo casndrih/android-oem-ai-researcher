@@ -39,7 +39,8 @@ def main():
     dr = sub.add_parser("device-report", help="Build a device-specific ADB/MTP/SELinux/CVE report")
     dr.add_argument("directory", type=Path)
     dr.add_argument("--cve-json", type=Path, help="Local NVD CVE JSON 2.0 export")
-    dr.add_argument("--components-json", type=Path, help="Optional JSON component inventory with name/version and optional CPE")\n    dr.add_argument("--bulletin", type=Path, help="Saved official Android/vendor security bulletin HTML or text")
+    dr.add_argument("--components-json", type=Path, help="Optional JSON component inventory with name/version and optional CPE")
+    dr.add_argument("--bulletin", type=Path, help="Saved official Android/vendor security bulletin HTML or text")
     dr.add_argument("--ai", action="store_true", help="Add GLM/OpenAI-compatible evidence assessment")
     dr.add_argument("--out", type=Path, default=Path("reports/device-security"))
 

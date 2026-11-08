@@ -1,16 +1,30 @@
 """Offline CVE correlation against user-supplied NVD JSON 2.0 exports."""
 from pathlib import Path
-import json,re
+import json
+import re
+
+def _normal(value):
+    return re.sub(r"[^a-z0-9]", "", str(value).lower())
+
 def _versions(cve):
     out=[]
+    def walk(node):
+        for match in node.get("cpeMatch",[]) or []:
+            if match.get("vulnerable",True):
+                out.append(match)
+        for child in node.get("nodes",[]) or []:
+            walk(child)
     for node in cve.get("configurations",[]) or []:
-        for n in node.get("nodes",[]) or []:
-            for m in n.get("cpeMatch",[]) or []:
-                if m.get("vulnerable",True): out.append(m.get("criteria",""))
+        walk(node)
     return out
-def _cpe_matches(criteria, tokens):
-    c=criteria.lower()
-    return any(t and t.lower() in c for t in tokens)
+
+def _matches(criteria, tokens):
+    parts=criteria.lower().split(":")
+    normalized=[_normal(x) for x in tokens if x]
+    # Product/vendor CPE components only; do not match arbitrary descriptions.
+    cpe_values=[_normal(x) for x in parts[2:6] if x not in ("*","-")]
+    return bool(normalized and any(t and any(t in value or value in t for value in cpe_values) for t in normalized))
+
 def correlate_nvd(root: Path, nvd_json: Path|None, device: dict|None=None)->dict:
     device=device or {}
     props=device.get("properties",{})
@@ -25,8 +39,7 @@ def correlate_nvd(root: Path, nvd_json: Path|None, device: dict|None=None)->dict
     for item in vulns:
         cve=item.get("cve",item)
         criteria=_versions(cve)
-        if not criteria: continue
-        relevant=[x for x in criteria if _cpe_matches(x,tokens)]
+        relevant=[x for x in criteria if _matches(x.get("criteria",""),tokens)]
         if not relevant: continue
         desc=next((d.get("value","") for d in cve.get("descriptions",[]) if d.get("lang")=="en"),"")
         metrics=cve.get("metrics",{})
@@ -35,5 +48,5 @@ def correlate_nvd(root: Path, nvd_json: Path|None, device: dict|None=None)->dict
             if metrics.get(key):
                 cv=metrics[key][0].get("cvssData",{})
                 score=cv.get("baseScore"); severity=cv.get("baseSeverity"); break
-        matches.append({"cve_id":cve.get("id"),"published":cve.get("published"),"last_modified":cve.get("lastModified"),"description":desc[:1200],"cvss":score,"severity":severity,"matched_cpe":relevant[:10],"assessment":"candidate-match; verify affected version range and vendor backports"})
-    return {"source":str(p),"records_examined":len(vulns),"device_tokens":tokens,"matches":matches[:500],"status":"completed","limitations":["CPE substring matching is candidate generation, not proof of applicability.","Android OEM backports and vendor-specific firmware revisions may invalidate upstream version matches.","A device security patch level does not prove that every bulletin fix is present; verify OEM release notes and shipped component versions."]}
+        matches.append({"cve_id":cve.get("id"),"published":cve.get("published"),"last_modified":cve.get("lastModified"),"description":desc[:1200],"cvss":score,"severity":severity,"matched_cpe":[x.get("criteria") for x in relevant[:10]],"version_constraints":[{k:x.get(k) for k in ("versionStartIncluding","versionStartExcluding","versionEndIncluding","versionEndExcluding")} for x in relevant[:10]],"assessment":"candidate-match; verify affected version range and vendor backports"})
+    return {"source":str(p),"records_examined":len(vulns),"device_tokens":tokens,"matches":matches[:500],"status":"completed","limitations":["CPE vendor/product matching is candidate generation, not proof of applicability.","CPE version bounds are reported but are not evaluated against a normalized OEM firmware component inventory yet.","Android OEM backports and vendor-specific firmware revisions may invalidate upstream version matches.","A device security patch level does not prove that every bulletin fix is present; verify OEM release notes and shipped component versions."]}

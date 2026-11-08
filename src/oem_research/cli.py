@@ -30,6 +30,7 @@ def main():
     la.add_argument("--components-json", type=Path, help="Optional component inventory JSON")
     la.add_argument("--bulletin", type=Path, help="Saved official Android/vendor bulletin HTML or text")
     la.add_argument("--max-files", type=int, default=100000, help="Maximum regular files to inventory")
+    la.add_argument("--max-total-bytes", type=int, default=20 * 1024 * 1024 * 1024, help="Maximum aggregate bytes to hash and inventory")
     a = sub.add_parser("inspect")
     a.add_argument("firmware", type=Path)
     a.add_argument("--out", type=Path, default=Path("reports"))
@@ -90,7 +91,8 @@ def main():
     args = p.parse_args()
     if args.cmd == "analyze-local":
         result = analyze_local(args.source, args.out, args.ai, args.cve_json,
-                               args.components_json, args.bulletin, args.max_files)
+                               args.components_json, args.bulletin, args.max_files,
+                               args.max_total_bytes)
         print(json.dumps({
             "report_json": str(args.out / "report.json"),
             "report_markdown": str(args.out / "report.md"),

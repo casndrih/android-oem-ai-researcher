@@ -118,7 +118,7 @@ The unified report includes:
 - Optional offline CVE candidate correlation against a user-supplied NVD JSON 2.0 export, using device identity tokens and CPE criteria.
 - Optional GLM analysis through `OPENAI_BASE_URL`, `OPENAI_API_KEY` and the configured model. AI is instructed to separate confirmed evidence, hypotheses, false-positive possibilities and unknowns.
 
-Install AI support with `pip install -e ".[ai]"`. Set `OPENAI_BASE_URL`, `OPENAI_API_KEY` and optionally adapt the model name in the report integration to your provider.
+AI support is built into the standard-library client; no extra Python package is required. Set `OPENAI_BASE_URL`, `OPENAI_API_KEY` and configure the model name for your provider.
 
 ### CVE matching caveats
 

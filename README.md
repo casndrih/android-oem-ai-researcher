@@ -60,19 +60,22 @@ This does **not** claim to prove an exploit is present or exploitable. It does n
     droidsec partitions /path/to/extracted/images --out reports
     droidsec plan "Review boot chain and vendor partition"
 
-## Install on Windows 11 / WSL2 Ubuntu
-    sudo apt update
-    sudo apt install -y python3 python3-venv python3-pip git
-    git clone https://github.com/casndrih/android-oem-ai-researcher.git
+## Install and run on Windows 11 / WSL2 Ubuntu
+
+The core application now has **zero third-party Python runtime dependencies**. Clone or download the repository and run it directly:
+
+    git clone -b develop https://github.com/casndrih/android-oem-ai-researcher.git
     cd android-oem-ai-researcher
-    git checkout develop
-    python3 -m venv .venv
-    source .venv/bin/activate
-    pip install -e '.[dev]'
-    pytest
+    python3 droidsec.py vendors
+    python3 droidsec.py analyze-local ./firmware_tree --out ./reports/sample
+
+On Windows PowerShell use `py -3 droidsec.py vendors`, or run `droidsec.bat vendors` from Command Prompt. On WSL2, use `./droidsec vendors`.
+
+See [docs/OFFLINE_INSTALL.md](docs/OFFLINE_INSTALL.md) for the offline workflow and optional host utilities. `pytest` is only needed for developer testing; CI installs it separately.
 
 ## GLM API
-Install `pip install -e '.[ai]'`, then set `OPENAI_API_KEY` and `OPENAI_BASE_URL`. Never commit credentials. Model output is advisory and must be grounded in collected evidence.
+
+The OpenAI-compatible GLM client uses Python's standard-library HTTP support; no `openai` SDK or pip installation is required. Set `OPENAI_API_KEY` and `OPENAI_BASE_URL`. Never commit credentials. Model output is advisory and must be grounded in collected evidence.
 
 ## Safety and limitations
 All extractors operate offline on local files. No device connection, flashing, bootloader unlocking, exploitation, programmer execution, or partition writes are performed. Format support is revision-dependent; validate with authorized real firmware samples. This is a research toolkit, not a universal firmware unpacker.
@@ -230,3 +233,8 @@ find R2406_extracted -type f -iname '*.pac' -print
 Then pass the discovered PAC path to `analyze-local`. If the PAC parser rejects the file, preserve the original and send the error plus the PAC header metadata; do not force extraction. A PAC revision mismatch is a parser-compatibility issue, not proof the firmware is corrupt.
 
 **Important boundaries:** the workflow does not mount raw filesystems or automatically unpack ext4/EROFS/squashfs partition images. It inventories and hashes those images, and scans any already-extracted text/configuration. PAC parsing is revision-dependent. Compare extraction results with a second trusted PAC parser before considering the partition extraction validated. No firmware binaries are uploaded by this command.
+
+
+## Self-contained offline operation
+
+See [Offline installation and dependency policy](docs/OFFLINE_INSTALL.md). The repository includes direct Windows and Linux/WSL2 launchers. The core runtime is standard-library-only; optional native utilities are documented separately and are not silently downloaded.
